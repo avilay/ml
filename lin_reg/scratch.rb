@@ -76,8 +76,15 @@ def grad_desc(theta_vec, alpha)
   [theta_vec, j_hist]
 end
 
+puts "\nX:"
 puts $x_mat.inspect
+
+puts "\ny:"
 puts $y_vec.inspect
 thetas, j_hist = grad_desc(Matrix.column_vector(Array.new($n).fill(0)), 0.01)
-puts j_hist.inspect
+#puts j_hist.inspect
+puts "\nWeights: "
 puts thetas.inspect
+
+puts "\nHypothesis: "
+puts h(thetas)
