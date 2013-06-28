@@ -1,14 +1,22 @@
 require 'matrix'
 require_relative '../utils'
 
+class LinearRegressionModel
+  attr_accessor :theta_vec, :normal_params
+
+  def initialize
+
+  end
+end
+
 class LinearRegression
   MAX_ITERS = 5000
 
   def initialize(x_mat = nil, y_vec = nil)
     @x_mat = x_mat
     @y_vec = y_vec
-    @num_instances = 0
-    @num_features = 0
+    @num_instances = @y_vec.size if @y_vec
+    @num_features = @x_mat.column_size if @x_mat
     @theta_vec = nil    
   end
 
@@ -24,7 +32,10 @@ class LinearRegression
     puts "\nJ = " + J(@theta_vec).to_s
   end
 
-  def load_data(data_file)
+  # load_data(data_file: filename)
+  # OR
+  # load_data(x_mat: <matrix>, y_vec: <vector>)
+  def load_data(params)
 
   end
 
@@ -32,10 +43,14 @@ class LinearRegression
 
   end
 
-  def train(alpha = 0.01)
-    @num_instances = @y_vec.size
+  def prepare_data
     @x_mat = @x_mat.normalize_columns
     @x_mat = @x_mat.insert_column(0, Vector.ones(@num_instances))
+    @num_features += 1
+  end
+
+  def train(alpha = 0.01)
+    @num_instances = @y_vec.size
     @num_features = @x_mat.column_size
     @theta_vec = grad_desc(Vector.zeros(@num_features), alpha)
   end
@@ -48,7 +63,9 @@ class LinearRegression
   def cost
     J(@theta_vec)
   end
-  
+
+  attr_reader :num_iters_till_conv
+
   private
 
   def h(theta_vec)
@@ -80,11 +97,13 @@ class LinearRegression
       #covergence has been reached
       if ( j1 > j0 && i > 1 ) ||  #The cost has reached the rigth side of U
         ( (j0 - j1) <= 0.001 )    #The cost reduction is too little to matter
+        @num_iters_till_conv = i
         return theta_vec
       end
       
       theta_vec = theta_vec_new
     end
+    @num_iters_till_conv = MAX_ITERS
     return theta_vec
   end
 
