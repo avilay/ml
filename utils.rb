@@ -7,6 +7,10 @@ class NormalParams
     @avg = params[:avg]
     @stdev = params[:stdev]
   end
+
+  def to_h
+    {'avg' => @avg, 'stdev' => @stdev}
+  end
 end
 
 class Array
@@ -42,8 +46,10 @@ class Vector
   end
 
   def normalize
-    @np = NormalParams.new(:avg=>self.to_a.avg, :stdev=>self.to_a.stdev)
-    return Vector.elements(self.to_a.normalize)
+    np = NormalParams.new(:avg=>self.to_a.avg, :stdev=>self.to_a.stdev)
+    ret = Vector.elements(self.to_a.normalize)
+    ret.normal_params = np
+    return ret
   end
 
   def normal_params
@@ -51,7 +57,13 @@ class Vector
   end
 
   def insert(i, val)
-    Vector.elements(self.to_a.insert(i, val))
+    ret = Vector.elements(self.to_a.insert(i, val))
+    ret.normal_params = @np if @np
+    return ret
+  end
+
+  def normal_params=(np)
+    @np = np
   end
 end
 
@@ -60,17 +72,21 @@ class Matrix
     cols = column_vectors
     cols[i] = cols[i].normalize
     (@nps ||= [])[i] = cols[i].normal_params
-    return Matrix.columns(cols)
+    ret = Matrix.columns(cols)
+    ret.normal_params = @nps
+    return ret
   end
 
   def normalize_columns
     cols = column_vectors
-    @nps ||= []
+    nps ||= []
     cols.each_with_index do |col, i|
       cols[i] = col.normalize
-      @nps[i] = col.normal_params
+      nps[i] = cols[i].normal_params
     end
-    return Matrix.columns(cols)
+    ret = Matrix.columns(cols)
+    ret.normal_params = nps
+    return ret
   end
 
   def normal_params(i = -1)
@@ -80,6 +96,15 @@ class Matrix
   def insert_column(i, ary)
     cols = column_vectors
     cols.insert(i, ary)
-    return Matrix.columns(cols)
+    ret = Matrix.columns(cols)
+    if @nps
+      @nps.insert(i, nil)
+      ret.normal_params = @nps
+    end
+    return ret
+  end
+
+  def normal_params=(nps)
+    @nps = nps
   end
 end
